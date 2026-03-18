@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: app
+  profiles:
+    active: dev
+  
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://postgres:5432/rpa
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: 9000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+server:
+  port: 8083
