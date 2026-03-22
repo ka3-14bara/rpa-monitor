@@ -5,20 +5,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface RpaErrorRepository extends JpaRepository<RpaError, Long> {
 
-    List<RpaError> findByProjectNumber(String projectNumber);
+    Page<RpaError> findByProjectNumber(String project, Pageable pageable);
 
-    List<RpaError> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
-
-    List<RpaError> findByProjectNumberAndCreatedAtBetween(
-            String projectNumber,
+    Page<RpaError> findByCreatedAtBetween(
             LocalDateTime from,
-            LocalDateTime to);
+            LocalDateTime to,
+            Pageable pageable);
+
+    Page<RpaError> findByProjectNumberAndCreatedAtBetween(
+            String project,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable);
 
     @Modifying
     @Transactional

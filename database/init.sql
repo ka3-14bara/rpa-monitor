@@ -45,11 +45,11 @@ CREATE TABLE jenkins_errors (
 
     screen_resolution TEXT,
 
-    is_read BOOLEAN DEFAULT FALSE,
-
     UNIQUE (message_id, project_number, stage),
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+
+    is_read BOOLEAN DEFAULT FALSE,
 );
 
 -- индексы (ускорят фильтры в Spring)

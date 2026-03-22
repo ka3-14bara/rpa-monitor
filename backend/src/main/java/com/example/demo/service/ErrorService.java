@@ -3,9 +3,10 @@ package com.example.demo.service;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class ErrorService {
@@ -16,40 +17,6 @@ public class ErrorService {
     public ErrorService(RpaErrorRepository rpaRepo, JenkinsErrorRepository jenkinsRepo) {
         this.rpaRepo = rpaRepo;
         this.jenkinsRepo = jenkinsRepo;
-    }
-
-    public List<RpaError> getRpaErrors(String project, LocalDateTime from, LocalDateTime to) {
-
-        if (project != null && from != null && to != null) {
-            return rpaRepo.findByProjectNumberAndCreatedAtBetween(project, from, to);
-        }
-
-        if (project != null) {
-            return rpaRepo.findByProjectNumber(project);
-        }
-
-        if (from != null && to != null) {
-            return rpaRepo.findByCreatedAtBetween(from, to);
-        }
-
-        return rpaRepo.findAll();
-    }
-
-    public List<JenkinsError> getJenkinsErrors(String project, LocalDateTime from, LocalDateTime to) {
-
-        if (project != null && from != null && to != null) {
-            return jenkinsRepo.findByProjectNumberAndCreatedAtBetween(project, from, to);
-        }
-
-        if (project != null) {
-            return jenkinsRepo.findByProjectNumber(project);
-        }
-
-        if (from != null && to != null) {
-            return jenkinsRepo.findByCreatedAtBetween(from, to);
-        }
-
-        return jenkinsRepo.findAll();
     }
 
     // одно сообщение
@@ -72,5 +39,49 @@ public class ErrorService {
 
     public void markAllJenkinsByProject(String project) {
         jenkinsRepo.markAllAsReadByProject(project);
+    }
+
+    public Page<RpaError> getRpaErrors(
+            String project,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable) {
+
+        if (project != null && from != null && to != null) {
+            return rpaRepo.findByProjectNumberAndCreatedAtBetween(
+                    project, from, to, pageable);
+        }
+
+        if (project != null) {
+            return rpaRepo.findByProjectNumber(project, pageable);
+        }
+
+        if (from != null && to != null) {
+            return rpaRepo.findByCreatedAtBetween(from, to, pageable);
+        }
+
+        return rpaRepo.findAll(pageable);
+    }
+
+    public Page<JenkinsError> getJenkinsErrors(
+            String project,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable) {
+
+        if (project != null && from != null && to != null) {
+            return jenkinsRepo.findByProjectNumberAndCreatedAtBetween(
+                    project, from, to, pageable);
+        }
+
+        if (project != null) {
+            return jenkinsRepo.findByProjectNumber(project, pageable);
+        }
+
+        if (from != null && to != null) {
+            return jenkinsRepo.findByCreatedAtBetween(from, to, pageable);
+        }
+
+        return jenkinsRepo.findAll(pageable);
     }
 }
