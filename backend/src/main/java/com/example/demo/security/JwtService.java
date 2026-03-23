@@ -1,6 +1,7 @@
 package com.example.demo.security;
 
 import java.util.Date;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -27,5 +28,9 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public String generateRefreshToken(String username) {
+        return UUID.randomUUID().toString();
     }
 }

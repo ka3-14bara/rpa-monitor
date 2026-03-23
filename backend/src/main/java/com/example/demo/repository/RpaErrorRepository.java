@@ -9,8 +9,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface RpaErrorRepository extends JpaRepository<RpaError, Long> {
+
+    Optional<RpaError> findTopByProjectNumberOrderByCreatedAtDesc(String projectNumber);
 
     Page<RpaError> findByProjectNumber(String project, Pageable pageable);
 
