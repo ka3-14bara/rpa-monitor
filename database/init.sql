@@ -52,6 +52,12 @@ CREATE TABLE jenkins_errors (
     is_read BOOLEAN DEFAULT FALSE,
 );
 
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL
+)
+
 -- индексы (ускорят фильтры в Spring)
 CREATE INDEX idx_rpa_project ON rpa_errors(project_number);
 CREATE INDEX idx_jenkins_project ON jenkins_errors(project_number);
