@@ -45,12 +45,18 @@ CREATE TABLE jenkins_errors (
 
     screen_resolution TEXT,
 
-    is_read BOOLEAN DEFAULT FALSE,
-
     UNIQUE (message_id, project_number, stage),
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+
+    is_read BOOLEAN DEFAULT FALSE,
 );
+
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL
+)
 
 -- индексы (ускорят фильтры в Spring)
 CREATE INDEX idx_rpa_project ON rpa_errors(project_number);

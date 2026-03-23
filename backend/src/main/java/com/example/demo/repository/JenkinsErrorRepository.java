@@ -1,24 +1,30 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.JenkinsError;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface JenkinsErrorRepository extends JpaRepository<JenkinsError, Long> {
 
-    List<JenkinsError> findByProjectNumber(String projectNumber);
+    Page<JenkinsError> findByProjectNumber(String project, Pageable pageable);
 
-    List<JenkinsError> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
-
-    List<JenkinsError> findByProjectNumberAndCreatedAtBetween(
-            String projectNumber,
+    Page<JenkinsError> findByCreatedAtBetween(
             LocalDateTime from,
-            LocalDateTime to);
+            LocalDateTime to,
+            Pageable pageable);
+
+    Page<JenkinsError> findByProjectNumberAndCreatedAtBetween(
+            String project,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable);
 
     @Modifying
     @Transactional

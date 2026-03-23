@@ -3,9 +3,10 @@ package com.example.demo.controller;
 import com.example.demo.entity.*;
 import com.example.demo.service.ErrorService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/errors")
@@ -19,26 +20,30 @@ public class ErrorController {
 
     // --- RPA ---
     @GetMapping("/rpa")
-    public List<RpaError> getRpaErrors(
+    public Page<RpaError> getRpaErrors(
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String from,
-            @RequestParam(required = false) String to) {
+            @RequestParam(required = false) String to,
+            Pageable pageable) {
         return service.getRpaErrors(
                 project,
                 parseDate(from),
-                parseDate(to));
+                parseDate(to),
+                pageable);
     }
 
     // --- Jenkins ---
     @GetMapping("/jenkins")
-    public List<JenkinsError> getJenkinsErrors(
+    public Page<JenkinsError> getJenkinsErrors(
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String from,
-            @RequestParam(required = false) String to) {
+            @RequestParam(required = false) String to,
+            Pageable pageable) {
         return service.getJenkinsErrors(
                 project,
                 parseDate(from),
-                parseDate(to));
+                parseDate(to),
+                pageable);
     }
 
     private LocalDateTime parseDate(String date) {
