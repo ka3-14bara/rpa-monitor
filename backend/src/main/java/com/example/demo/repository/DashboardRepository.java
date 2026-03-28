@@ -14,15 +14,19 @@ public interface DashboardRepository extends JpaRepository<RpaError, Long> {
                 project_number,
                 source,
                 stage,
-                ex_message as message,
-                created_at
+                message,
+                created_at,
+                message_id,
+                is_read
             FROM (
                 SELECT
                     project_number,
                     'RPA' as source,
                     stage,
-                    ex_message,
-                    created_at
+                    ex_message as message,
+                    created_at,
+                    message_id,
+                    is_read
                 FROM rpa_errors
 
                 UNION ALL
@@ -31,8 +35,10 @@ public interface DashboardRepository extends JpaRepository<RpaError, Long> {
                     project_number,
                     'JENKINS' as source,
                     stage,
-                    ex_message,
-                    created_at
+                    ex_message as message,
+                    created_at,
+                    message_id,
+                    is_read
                 FROM jenkins_errors
             ) combined
             WHERE project_number IN (:projects)

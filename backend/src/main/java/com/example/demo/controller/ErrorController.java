@@ -9,7 +9,11 @@ import com.example.demo.service.ErrorWebSocketService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +36,7 @@ public class ErrorController {
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
-            Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         return service.getRpaErrors(
                 project,
                 parseDate(from),
@@ -46,7 +50,7 @@ public class ErrorController {
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
-            Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         return service.getJenkinsErrors(
                 project,
                 parseDate(from),
@@ -74,8 +78,14 @@ public class ErrorController {
 
     // --- user's last errors ---
     @GetMapping("/user/last-errors")
-    public List<LastErrorDto> getLastErrors(Authentication auth) {
-        return service.getLastErrorsForUserProjects(auth.getName());
+    public ResponseEntity<?> getLastErrors() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String username = auth.getName();
+        List<LastErrorDto> lastErrors = service.getLastErrorsForUserProjects(username);
+        return ResponseEntity.ok(lastErrors);
     }
 
     // отметить одно сообщение
