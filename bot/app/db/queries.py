@@ -24,9 +24,10 @@ async def insert_rpa(message_id, data):
             ex_type, ex_message,
             activity_type, activity_name,
             computer_name, component_id,
-            screen_resolution, tries_count, created_at
+            screen_resolution, tries_count,
+            created_at, is_read
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
         ON CONFLICT (message_id) DO NOTHING
     """,
         message_id,
@@ -56,9 +57,10 @@ async def insert_jenkins(message_id, data):
             message_id, project_number, stage,
             ex_type, ex_message,
             activity_block, jenkins_node,
-            screen_resolution, created_at
+            screen_resolution,
+            created_at, is_read
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
         ON CONFLICT (message_id, project_number, stage) DO NOTHING
     """,
         message_id,

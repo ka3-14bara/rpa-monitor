@@ -14,4 +14,6 @@ public class LastErrorDto {
     private String stage;
     private String message;
     private LocalDateTime createdAt;
+    private Number messageId;
+    private Boolean isRead;
 }

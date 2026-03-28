@@ -141,7 +141,9 @@ public class ErrorService {
                         (String) r[1],
                         (String) r[2],
                         (String) r[3],
-                        ((Timestamp) r[4]).toLocalDateTime()))
+                        ((Timestamp) r[4]).toLocalDateTime(),
+                        (Number) r[5],
+                        (Boolean) r[6]))
                 .toList();
     }
 }

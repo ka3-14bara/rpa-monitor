@@ -49,14 +49,15 @@ CREATE TABLE jenkins_errors (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
 
-    is_read BOOLEAN DEFAULT FALSE,
+    is_read BOOLEAN DEFAULT FALSE
 );
 
 -- USERS
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50)
 );
 
 -- REFRESH TOKENS
@@ -75,5 +76,5 @@ CREATE TABLE user_projects (
 );
 
 -- индексы (ускорят фильтры в Spring)
-CREATE INDEX idx_rpa_project ON rpa_errors(project_number);
-CREATE INDEX idx_jenkins_project ON jenkins_errors(project_number);
+CREATE INDEX idx_rpa_created ON rpa_errors(created_at DESC);
+CREATE INDEX idx_jenkins_created ON jenkins_errors(created_at DESC);
