@@ -10,8 +10,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface JenkinsErrorRepository extends JpaRepository<JenkinsError, Long> {
+
+    Optional<JenkinsError> findTopByProjectNumberOrderByCreatedAtDesc(String projectNumber);
 
     Page<JenkinsError> findByProjectNumber(String project, Pageable pageable);
 

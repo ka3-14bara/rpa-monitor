@@ -1,22 +1,37 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.LastErrorDto;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ErrorService {
 
     private final RpaErrorRepository rpaRepo;
     private final JenkinsErrorRepository jenkinsRepo;
+    private final ProjectRepository projectRepo;
+    private final UserProjectRepository userProjectRepo;
+    private final DashboardRepository dashboardRepo;
 
-    public ErrorService(RpaErrorRepository rpaRepo, JenkinsErrorRepository jenkinsRepo) {
+    public ErrorService(
+            RpaErrorRepository rpaRepo,
+            JenkinsErrorRepository jenkinsRepo,
+            ProjectRepository projectRepo,
+            UserProjectRepository userProjectRepo,
+            DashboardRepository dashboardRepo) {
         this.rpaRepo = rpaRepo;
         this.jenkinsRepo = jenkinsRepo;
+        this.projectRepo = projectRepo;
+        this.userProjectRepo = userProjectRepo;
+        this.dashboardRepo = dashboardRepo;
     }
 
     // одно сообщение
@@ -83,5 +98,50 @@ public class ErrorService {
         }
 
         return jenkinsRepo.findAll(pageable);
+    }
+
+    public List<String> getAllProjects() {
+        return projectRepo.findAllProjects();
+    }
+
+    public void saveUserProjects(String username, List<String> projects) {
+        userProjectRepo.deleteByUsername(username);
+
+        List<UserProject> list = projects.stream()
+                .map(p -> {
+                    UserProject up = new UserProject();
+                    up.setUsername(username);
+                    up.setProjectNumber(p);
+                    return up;
+                })
+                .toList();
+
+        userProjectRepo.saveAll(list);
+    }
+
+    public List<String> getUserProjects(String username) {
+        return userProjectRepo.findByUsername(username)
+                .stream()
+                .map(UserProject::getProjectNumber)
+                .toList();
+    }
+
+    public List<LastErrorDto> getLastErrorsForUserProjects(String username) {
+
+        List<String> projects = userProjectRepo.findByUsername(username)
+                .stream()
+                .map(UserProject::getProjectNumber)
+                .toList();
+
+        List<Object[]> rows = dashboardRepo.findLastErrorsByProjects(projects);
+
+        return rows.stream()
+                .map(r -> new LastErrorDto(
+                        (String) r[0],
+                        (String) r[1],
+                        (String) r[2],
+                        (String) r[3],
+                        ((Timestamp) r[4]).toLocalDateTime()))
+                .toList();
     }
 }
