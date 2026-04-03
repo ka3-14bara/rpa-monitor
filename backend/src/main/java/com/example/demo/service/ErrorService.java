@@ -3,6 +3,9 @@ package com.example.demo.service;
 import com.example.demo.dto.LastErrorDto;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -104,6 +107,7 @@ public class ErrorService {
         return projectRepo.findAllProjects();
     }
 
+    @Transactional
     public void saveUserProjects(String username, List<String> projects) {
         userProjectRepo.deleteByUsername(username);
 
