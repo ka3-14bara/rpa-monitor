@@ -3,9 +3,11 @@ package com.example.demo.security;
 import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.FilterChain;
@@ -38,14 +40,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
-            try {
-                String username = jwtService.extractUsername(token);
+            String username = jwtService.extractUsername(token);
+            String role = jwtService.extractRole(token); // ← извлекаем роль
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                List<SimpleGrantedAuthority> authorities = List.of(
+                        new SimpleGrantedAuthority(role));
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        username, null, List.of());
+                        username, null, authorities); // ← добавляем роли
                 SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception e) {
-                log.error("JWT processing failed: {}", e.getMessage());
-                // Не прерываем цепочку, просто не аутентифицируем
             }
         }
 

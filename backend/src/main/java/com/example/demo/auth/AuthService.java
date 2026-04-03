@@ -48,7 +48,10 @@ public class AuthService {
     }
 
     private AuthResponseDto generateTokens(String username) {
-        String access = jwtService.generateToken(username);
+        User user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String access = jwtService.generateToken(username, user.getRole());
         String refresh = UUID.randomUUID().toString();
 
         RefreshToken token = new RefreshToken();

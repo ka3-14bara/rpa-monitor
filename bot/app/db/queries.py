@@ -5,54 +5,60 @@ from app.db.database import get_connection
 async def save_raw(message_id, text):
     conn = await get_connection()
 
-    await conn.execute("""
-        INSERT INTO raw_messages (message_id, text, created_at)
-        VALUES ($1,$2,$3)
-        ON CONFLICT (message_id) DO NOTHING
-    """, message_id, text, datetime.now())
+    async with conn.transaction():
+        await conn.execute("""
+            INSERT INTO raw_messages (message_id, text, created_at)
+            VALUES ($1,$2,$3)
+            ON CONFLICT (message_id) DO NOTHING
+        """, message_id, text, datetime.now())
 
     await conn.close()
 
 
 # --- RPA ---
 async def insert_rpa(message_id, data):
-    conn = await get_connection()
+    try:
+        conn = await get_connection()
 
-    await conn.execute("""
-        INSERT INTO rpa_errors (
-            message_id, project_number, stage,
-            ex_type, ex_message,
-            activity_type, activity_name,
-            computer_name, component_id,
-            screen_resolution, tries_count,
-            created_at, is_read
+        async with conn.transaction():
+            await conn.execute("""
+            INSERT INTO rpa_errors (
+                message_id, project_number, stage,
+                ex_type, ex_message,
+                activity_type, activity_name,
+                computer_name, component_id,
+                screen_resolution, tries_count,
+                created_at, is_read
+            )
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+            ON CONFLICT (message_id) DO NOTHING
+        """,
+            message_id,
+            data.get("project_number"),
+            data.get("stage"),
+            data.get("ex_type"),
+            data.get("ex_message"),
+            data.get("activity_type"),
+            data.get("activity_name"),
+            data.get("computer_name"),
+            data.get("component_id"),
+            data.get("screen_resolution"),
+            data.get("tries_count"),
+            datetime.now(),
+            False
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-        ON CONFLICT (message_id) DO NOTHING
-    """,
-        message_id,
-        data.get("project_number"),
-        data.get("stage"),
-        data.get("ex_type"),
-        data.get("ex_message"),
-        data.get("activity_type"),
-        data.get("activity_name"),
-        data.get("computer_name"),
-        data.get("component_id"),
-        data.get("screen_resolution"),
-        data.get("tries_count"),
-        datetime.now(),
-        False
-    )
 
-    await conn.close()
-
+        await conn.close()
+        print("DEBUG: Done!")
+    except Exception as e:
+        print(f"DATABASE ERROR: {e}")
 
 # --- Jenkins ---
 async def insert_jenkins(message_id, data):
     conn = await get_connection()
 
-    await conn.execute("""
+    async with conn.transaction():
+        await conn.execute("""
         INSERT INTO jenkins_errors (
             message_id, project_number, stage,
             ex_type, ex_message,
