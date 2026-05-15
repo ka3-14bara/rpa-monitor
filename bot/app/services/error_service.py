@@ -7,6 +7,7 @@ async def process_message(message):
 
     logger.info(f"Message received: {message.message_id}")
 
+    # Сохраняем сырое сообщение
     await save_raw(message.message_id, text)
 
     try:
@@ -14,7 +15,7 @@ async def process_message(message):
         if "RPA prod ERROR" in text:
             data = parse_rpa(text)
 
-            if not data["project_number"]:
+            if not data.get("project_number"):
                 logger.warning(f"RPA NOT PARSED: {text}")
 
             await insert_rpa(message.message_id, data)
@@ -23,27 +24,28 @@ async def process_message(message):
         elif "TimeMonitoring" in text:
             items = parse_time_monitoring(text)
 
-            if not items:
+            if not items or items[0]["project_number"] is None:
                 logger.warning(f"TM NOT PARSED: {text}")
 
-            for item in items:
-                await insert_jenkins(message.message_id, item)
+            # Передаем ВЕСЬ список items сразу, без цикла!
+            # Функция insert_jenkins внутри db.py сама обработает этот список.
+            await insert_jenkins(message.message_id, items)
 
         # --- Jenkins ---
         elif "Jenkins" in text:
+            #parse_jenkins уже содержит внутри себя вызов extract_project_stage
+            # и возвращает готовый словарь с заполненными project_number и stage.
             data = parse_jenkins(text)
-            projects = extract_project_stage(text)
 
-            for proj, stage in projects:
-                data_copy = data.copy()
-                data_copy["project_number"] = proj
-                data_copy["stage"] = stage
+            if not data.get("project_number"):
+                logger.warning(f"JENKINS NOT PARSED: {text}")
 
-                await insert_jenkins(message.message_id, data_copy)
+            # Передаем готовый словарь напрямую в функцию БД
+            await insert_jenkins(message.message_id, data)
 
         else:
             logger.info("Skipped message")
 
     except Exception as e:
-        logger.error(f"ERROR: {e}")
+        logger.error(f"ERROR inside process_message: {e}")
         logger.error(text)

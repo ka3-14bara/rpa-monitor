@@ -25,6 +25,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <div className="flex items-center space-x-4">
+              <Link to="/analytics" className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition">
+                📊 Аналитика
+              </Link>
               <div className="flex items-center space-x-2 px-3 py-2 bg-gray-700 rounded-lg">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-sm font-semibold">

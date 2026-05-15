@@ -55,3 +55,16 @@ export type UserDto = {
   username: string;
   role: string;
 };
+
+export interface TimeSeriesPointDto {
+  date: string;
+  rpaCount: number;
+  jenkinsCount: number;
+}
+
+export interface DashboardDataDto {
+  errorsByProject: Record<string, number>;
+  errorsBySource: Record<string, number>;
+  errorsOverTime: TimeSeriesPointDto[];
+  totalErrors: number;
+}

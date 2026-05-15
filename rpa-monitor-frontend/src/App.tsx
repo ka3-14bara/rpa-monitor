@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import ProjectPage from "./pages/ProjectPage";
 import type { JSX } from "react";
 import { AdminPanel } from "./pages/AdminPanel";
+import DashboardAnalytics from "./pages/DashboardAnalytics";
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { isAuthenticated } = useAuth();
@@ -39,6 +40,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminPanel />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <DashboardAnalytics />
           </ProtectedRoute>
         }
       />

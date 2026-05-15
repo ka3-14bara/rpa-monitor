@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
@@ -33,4 +34,10 @@ public interface JenkinsErrorRepository extends JpaRepository<JenkinsError, Long
     @Transactional
     @Query("UPDATE JenkinsError e SET e.isRead = true WHERE e.projectNumber = :projectNumber")
     void markAllAsReadByProject(String projectNumber);
+
+    @Query("SELECT e.projectNumber, COUNT(e) FROM JenkinsError e WHERE e.projectNumber IN :projects AND e.createdAt BETWEEN :from AND :to GROUP BY e.projectNumber")
+    List<Object[]> countByProjectInAndDateBetween(List<String> projects, LocalDateTime from, LocalDateTime to);
+
+    @Query("SELECT e FROM JenkinsError e WHERE e.projectNumber IN :projects AND e.createdAt BETWEEN :from AND :to")
+    List<JenkinsError> findByProjectNumberInAndCreatedAtBetween(List<String> projects, LocalDateTime from, LocalDateTime to);
 }
