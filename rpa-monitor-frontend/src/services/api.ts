@@ -1,4 +1,5 @@
 import type { RpaError, JenkinsError, LastErrorDto, PageResponse, UserDto } from '../types/index';
+import type { DashboardDataDto } from '../types';
 
 const API_BASE = 'http://localhost:8080';
 
@@ -163,6 +164,39 @@ export const adminApi = {
     api<{ message: string }>(`/admin/users/${id}`, {
       method: 'DELETE',
     }),
+};
+
+export const dashboardApi = {
+  getData: (params: { projects: string[]; from: string; to: string }) => {
+    const search = new URLSearchParams();
+    params.projects.forEach((p) => search.append('projects', p));
+    search.append('from', params.from);
+    search.append('to', params.to);
+    return api<DashboardDataDto>(`/api/dashboard/data?${search}`);
+  },
+
+  exportExcel: async (params: { projects: string[]; from: string; to: string }) => {
+    const search = new URLSearchParams();
+    params.projects.forEach((p) => search.append('projects', p));
+    search.append('from', params.from);
+    search.append('to', params.to);
+
+    const headers: Record<string, string> = {};
+    if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+    const res = await fetch(`${API_BASE}/api/dashboard/export?${search}`, { headers });
+    if (!res.ok) throw new Error('Ошибка формирования отчета');
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export const getAccessToken = () => accessToken;

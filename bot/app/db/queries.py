@@ -4,14 +4,12 @@ from app.db.database import get_connection
 # --- RAW ---
 async def save_raw(message_id, text):
     conn = await get_connection()
-
     async with conn.transaction():
         await conn.execute("""
             INSERT INTO raw_messages (message_id, text, created_at)
-            VALUES ($1,$2,$3)
+            VALUES ($1, $2, $3)
             ON CONFLICT (message_id) DO NOTHING
         """, message_id, text, datetime.now())
-
     await conn.close()
 
 
@@ -19,7 +17,6 @@ async def save_raw(message_id, text):
 async def insert_rpa(message_id, data):
     try:
         conn = await get_connection()
-
         async with conn.transaction():
             await conn.execute("""
             INSERT INTO rpa_errors (
@@ -47,38 +44,45 @@ async def insert_rpa(message_id, data):
             datetime.now(),
             False
         )
-
         await conn.close()
-        print("DEBUG: Done!")
+        print("DEBUG: RPA Insert Done!")
     except Exception as e:
-        print(f"DATABASE ERROR: {e}")
+        print(f"DATABASE ERROR (RPA): {e}")
+
 
 # --- Jenkins ---
 async def insert_jenkins(message_id, data):
-    conn = await get_connection()
+    try:
+        conn = await get_connection()
 
-    async with conn.transaction():
-        await conn.execute("""
-        INSERT INTO jenkins_errors (
-            message_id, project_number, stage,
-            ex_type, ex_message,
-            activity_block, jenkins_node,
-            screen_resolution,
-            created_at, is_read
-        )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        ON CONFLICT (message_id, project_number, stage) DO NOTHING
-    """,
-        message_id,
-        data.get("project_number"),
-        data.get("stage"),
-        data.get("ex_type"),
-        data.get("ex_message"),
-        data.get("activity_block"),
-        data.get("jenkins_node"),
-        data.get("screen_resolution"),
-        datetime.now(),
-        False
-    )
+        # Приводим к единому формату: всегда работаем со списком словарей
+        records = data if isinstance(data, list) else [data]
 
-    await conn.close()
+        async with conn.transaction():
+            for record in records:
+                await conn.execute("""
+                INSERT INTO jenkins_errors (
+                    message_id, project_number, stage,
+                    ex_type, ex_message,
+                    activity_block, jenkins_node,
+                    screen_resolution,
+                    created_at, is_read
+                )
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+                ON CONFLICT (message_id, project_number, stage) DO NOTHING
+            """,
+                message_id,
+                record.get("project_number"),
+                record.get("stage"),
+                record.get("ex_type"),
+                record.get("ex_message"),
+                record.get("activity_block"),
+                record.get("jenkins_node"),
+                record.get("screen_resolution"),
+                datetime.now(),
+                False
+            )
+        await conn.close()
+        print("DEBUG: Jenkins Insert Done!")
+    except Exception as e:
+        print(f"DATABASE ERROR (Jenkins): {e}")

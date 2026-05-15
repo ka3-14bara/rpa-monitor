@@ -2,83 +2,100 @@ import re
 
 # --- PROJECT PARSER ---
 def extract_project_stage(text):
-    results = []
-
-    # 018_1P
-    matches = re.findall(r'(\d{3})_(\d+[A-Z])', text)
-    results.extend(matches)
-
-    # 0231P
+    """Извлекает номер проекта и стадию из текста сообщения (строгая пара строк)."""
+    # Поиск паттернов вида 068_1P, 236_1P, 144_CBR_1P
+    matches = re.findall(r'(\d{3})(?:_[A-Z]+)?_(\d+[A-Z])', text)
+    if matches:
+        return matches[0][0], matches[0][1]  # Возвращаем строго (проект, стадия)
+    
+    # Поиск слитных паттернов вида 2641P, 0090P, 0421P
     matches = re.findall(r'(\d{3})(\d+[A-Z])', text)
-    results.extend(matches)
+    if matches:
+        return matches[0][0], matches[0][1]  # Возвращаем строго (проект, стадия)
+        
+    return None, None
 
-    # 077_097_1C
-    multi = re.search(r'(\d{3})_(\d{3})_(\d+[A-Z])', text)
-    if multi:
-        p1, p2, stage = multi.groups()
-        results.append((p1, stage))
-        results.append((p2, stage))
 
-    return list(set(results)) if results else [(None, None)]
+def clean_log_text(text):
+    """Удаляет из начала текста временные метки логирования Python/ТГ."""
+    return re.sub(r'^(?:\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3}\s*\|\s*[A-Z]+\s*\|\s*)+', '', text).strip()
+
+
+def find_field(text, pattern, flag=0):
+    """Утилита для безопасного поиска полей."""
+    m = re.search(pattern, text, flag)
+    return m.group(1).strip() if m else None
+
+
+def get_ex_message(text):
+    """Безопасно извлекает Ex Message до следующего ключевого блока."""
+    return find_field(text, r'Ex Message:\s*(.*?)(?:Activity|Jenkins node|The primary|Computer name|Component ID|$)', re.S)
 
 
 # --- RPA ---
 def parse_rpa(text):
-    def find(pattern):
-        m = re.search(pattern, text)
-        return m.group(1).strip() if m else None
-
-    proj_stage = extract_project_stage(text)[0]
+    text = clean_log_text(text)
+    proj_num, stage = extract_project_stage(text)
 
     return {
-        "project_number": proj_stage[0],
-        "stage": proj_stage[1],
-        "ex_type": find(r'Ex Type: (.+)'),
-        "ex_message": find(r'Ex Message: (.+)'),
-        "activity_type": find(r'Activity Type: (.+)'),
-        "activity_name": find(r'Activity Name: (.+)'),
-        "computer_name": find(r'Computer name: (.+)'),
-        "component_id": find(r'Component ID: (.+)'),
-        "screen_resolution": find(r'resolution.*: (.+)'),
-        "tries_count": find(r'Tries count: (.+)')
+        "project_number": proj_num,
+        "stage": stage,
+        "ex_type": find_field(text, r'Ex Type:\s*(.+)'),
+        "ex_message": get_ex_message(text),
+        "activity_type": find_field(text, r'Activity Type:\s*(.+)'),
+        "activity_name": find_field(text, r'Activity Name:\s*(.+)'),
+        "computer_name": find_field(text, r'Computer name:\s*(.+)'),
+        "component_id": find_field(text, r'Component ID:\s*(.+)'),
+        "screen_resolution": find_field(text, r'resolution.*:\s*(.+)', re.I),
+        "tries_count": find_field(text, r'Tries count:\s*(.+)')
     }
 
 
 # --- Jenkins ---
 def parse_jenkins(text):
-    def find(pattern):
-        m = re.search(pattern, text, re.S)
-        return m.group(1).strip() if m else None
+    text = clean_log_text(text)
+    proj_num, stage = extract_project_stage(text)
 
     return {
-        "ex_type": find(r'Ex Type: (.+)'),
-        "ex_message": find(r'Ex Message:([\s\S]+?)Activity'),
-        "activity_block": find(r'Activity Block: (.+)'),
-        "jenkins_node": find(r'Jenkins node: (.+)'),
-        "screen_resolution": find(r'resolution.*: (.+)')
+        "project_number": proj_num,
+        "stage": stage,
+        "ex_type": find_field(text, r'Ex Type:\s*(.+)'),
+        "ex_message": get_ex_message(text),
+        "activity_block": find_field(text, r'Activity Block:\s*(.+)'),
+        "jenkins_node": find_field(text, r'Jenkins node:\s*(.+)'),
+        "screen_resolution": find_field(text, r'resolution.*:\s*(.+)', re.I)
     }
 
 
 # --- TimeMonitoring ---
 def parse_time_monitoring(text):
+    text = clean_log_text(text)
     results = []
 
-    matches = re.findall(r'(\d{3})(\d)([PD])', text)
+    ex_type = find_field(text, r'Ex Type:\s*(.+)')
+    ex_message = get_ex_message(text)
+    activity_block = find_field(text, r'Activity Block:\s*(.+)') or "TimeMonitoring"
+    jenkins_node = find_field(text, r'Jenkins node:\s*(.+)')
+    resolution = find_field(text, r'resolution.*:\s*(.+)', re.I)
 
-    for m in matches:
-        project = m[0]
-        stage = m[1] + m[2]
+    # Находим всех роботов внутри Ex Message (например, 2232P, 0062P)
+    time_matches = re.findall(r'(\d{3})(\d+[A-Z])\s+работает', text)
 
-        line = re.search(rf'{project}{stage}.*', text)
-
+    for project, stage in time_matches:
         results.append({
             "project_number": project,
             "stage": stage,
-            "ex_type": "Business Exception",
-            "ex_message": line.group(0) if line else text,
-            "activity_block": "TimeMonitoring",
-            "jenkins_node": None,
-            "screen_resolution": None
+            "ex_type": ex_type,
+            "ex_message": ex_message,
+            "activity_block": activity_block,
+            "jenkins_node": jenkins_node,
+            "screen_resolution": resolution
+        })
+
+    if not results:
+        results.append({
+            "project_number": None, "stage": None, "ex_type": ex_type, "ex_message": ex_message,
+            "activity_block": activity_block, "jenkins_node": jenkins_node, "screen_resolution": resolution
         })
 
     return results

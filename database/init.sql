@@ -45,12 +45,12 @@ CREATE TABLE jenkins_errors (
 
     screen_resolution TEXT,
 
-    UNIQUE (message_id, project_number, stage),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    is_read BOOLEAN DEFAULT FALSE,
 
-    is_read BOOLEAN DEFAULT FALSE
+    CONSTRAINT jenkins_errors_msg_proj_stage_key UNIQUE (message_id, project_number, stage)
 );
+
 
 -- USERS
 CREATE TABLE users (
