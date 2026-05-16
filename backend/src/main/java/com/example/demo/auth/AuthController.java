@@ -1,16 +1,14 @@
 package com.example.demo.auth;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.Authentication;
-
-import com.example.demo.dto.AuthRequestDto;
-import com.example.demo.dto.AuthResponseDto;
-
-import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import java.util.Collections;
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import com.example.demo.dto.AuthRequestDto;
 
 @RestController
 @RequestMapping("/auth")
@@ -20,22 +18,32 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public AuthResponseDto register(@RequestBody AuthRequestDto req) {
-        return authService.register(req);
+    public ResponseEntity<Void> register(@RequestBody AuthRequestDto req, HttpServletResponse response) {
+        authService.register(req, response);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
-    public AuthResponseDto login(@RequestBody AuthRequestDto req) {
-        return authService.login(req);
+    public ResponseEntity<Void> login(@RequestBody AuthRequestDto req, HttpServletResponse response) {
+        authService.login(req, response);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/refresh")
-    public AuthResponseDto refresh(@RequestParam String refreshToken) {
-        return authService.refresh(refreshToken);
+    public ResponseEntity<Void> refresh(HttpServletRequest request, HttpServletResponse response) {
+        authService.refresh(request, response);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/logout")
-    public void logout(Authentication auth) {
-        authService.logout(auth.getName());
+    public ResponseEntity<Void> logout(Authentication auth, HttpServletResponse response) {
+        authService.logout(auth.getName(), response);
+        return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/me")
+    public Map<String, String> getCurrentUser(Authentication auth) {
+        return Collections.singletonMap("username", auth.getName());
+    }
+
 }

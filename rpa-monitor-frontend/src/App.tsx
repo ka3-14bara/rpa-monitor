@@ -9,12 +9,33 @@ import type { JSX } from "react";
 import { AdminPanel } from "./pages/AdminPanel";
 import DashboardAnalytics from "./pages/DashboardAnalytics";
 
+// Компонент ProtectedRoute теперь ждёт окончания загрузки
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Загрузка...
+      </div>
+    );
+  }
+
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
+// Компонент для обработки маршрутов, также может ожидать загрузку глобально
 function AppRoutes() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Загрузка...
+      </div>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -36,14 +57,13 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/admin-pannel"
+        path="/admin"
         element={
           <ProtectedRoute>
             <AdminPanel />
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/analytics"
         element={
