@@ -26,7 +26,8 @@ CREATE TABLE rpa_errors (
     tries_count TEXT,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_read BOOLEAN DEFAULT FALSE
+    is_read BOOLEAN DEFAULT FALSE,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 -- Jenkins
@@ -47,6 +48,7 @@ CREATE TABLE jenkins_errors (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     is_read BOOLEAN DEFAULT FALSE,
+    is_deleted BOOLEAN DEFAULT FALSE,
 
     CONSTRAINT jenkins_errors_msg_proj_stage_key UNIQUE (message_id, project_number, stage)
 );
@@ -78,3 +80,5 @@ CREATE TABLE user_projects (
 -- индексы (ускорят фильтры в Spring)
 CREATE INDEX idx_rpa_created ON rpa_errors(created_at DESC);
 CREATE INDEX idx_jenkins_created ON jenkins_errors(created_at DESC);
+CREATE INDEX idx_rpa_deleted ON rpa_errors(is_deleted);
+CREATE INDEX idx_jenkins_deleted ON jenkins_errors(is_deleted);
