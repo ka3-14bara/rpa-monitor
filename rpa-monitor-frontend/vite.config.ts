@@ -1,17 +1,19 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8080',
-      '/auth': 'http://localhost:8080',
-      '/ws': {
-        target: 'ws://localhost:8080',
+      "/auth": "http://localhost:8080",
+      "/api": "http://localhost:8080",
+      "/admin/": "http://localhost:8080",
+      "/ws": {
+        target: "http://localhost:8080",
         ws: true,
       },
     },
-    host: '0.0.0.0'
+    host: "0.0.0.0",
   },
-})
+});

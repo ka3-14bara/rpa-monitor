@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Client } from '@stomp/stompjs';
 import type { IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { getAccessToken } from '../services/api';
 import { useNotifications } from '../contexts/NotificationContext';
 
 type WebSocketErrorEvent = {
@@ -18,15 +17,11 @@ export function useWebSocket(onMessage?: (event: WebSocketErrorEvent) => void) {
   const [connected, setConnected] = useState(false);
 
   const connect = useCallback(() => {
-    const token = getAccessToken();
-    if (!token) return;
-
-    // STOMP клиент поверх SockJS (совместимо с вашим WebSocketConfig)
+    // WebSocket будет передавать cookies автоматически,
+    // если указать withCredentials: true для SockJS
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS(`/ws`),
-      connectHeaders: {
-        Authorization: `Bearer ${token}`, // Spring пока игнорирует, но пригодится при усилении безопасности
-      },
+      webSocketFactory: () =>
+  new SockJS('/ws', null, { withCredentials: true } as any),
       debug: (str) => console.debug('[STOMP]', str),
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
@@ -37,7 +32,6 @@ export function useWebSocket(onMessage?: (event: WebSocketErrorEvent) => void) {
       setConnected(true);
       addNotification('Real-time подключен', 'success');
 
-      // Подписка на топик, куда бэкенд шлёт ошибки
       stompClient.subscribe('/topic/errors', (message: IMessage) => {
         try {
           const data: WebSocketErrorEvent = JSON.parse(message.body);

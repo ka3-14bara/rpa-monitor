@@ -39,4 +39,7 @@ public class RpaError {
 
     @Column(name = "is_read")
     private Boolean isRead = false;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
 }

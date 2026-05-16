@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -70,6 +71,12 @@ public class ErrorController {
         return service.getUserProjects(auth.getName());
     }
 
+    // --- обновление проектов пользователя (PUT) ---
+    @PutMapping("/user/projects")
+    public void updateUserProjects(@RequestBody List<String> projects, Authentication auth) {
+        service.saveUserProjects(auth.getName(), projects);
+    }
+
     private LocalDateTime parseDate(String date) {
         if (date == null)
             return null;
@@ -100,7 +107,6 @@ public class ErrorController {
     }
 
     // отметить все по проекту
-
     @PostMapping("/rpa/project/{project}/read-all")
     public void markAllRpa(@PathVariable String project) {
         service.markAllRpaByProject(project);
@@ -111,11 +117,9 @@ public class ErrorController {
         service.markAllJenkinsByProject(project);
     }
 
-    // --- save user's projects ---
+    // --- save user's projects (POST для обратной совместимости) ---
     @PostMapping("/user/projects")
-    public void saveProjects(
-            @RequestBody List<String> projects,
-            Authentication auth) {
+    public void saveProjects(@RequestBody List<String> projects, Authentication auth) {
         service.saveUserProjects(auth.getName(), projects);
     }
 
@@ -123,5 +127,35 @@ public class ErrorController {
     @PostMapping("/notify")
     public void notifyError(@RequestBody ErrorEventDto dto) {
         errorWebSocketService.sendError(dto);
+    }
+
+    // ==================== ADMIN SOFT DELETE & RESTORE ====================
+
+    @DeleteMapping("/rpa/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> softDeleteRpa(@PathVariable Long id) {
+        service.softDeleteRpaError(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/jenkins/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> softDeleteJenkins(@PathVariable Long id) {
+        service.softDeleteJenkinsError(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/rpa/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> restoreRpa(@PathVariable Long id) {
+        service.restoreRpaError(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/jenkins/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> restoreJenkins(@PathVariable Long id) {
+        service.restoreJenkinsError(id);
+        return ResponseEntity.noContent().build();
     }
 }

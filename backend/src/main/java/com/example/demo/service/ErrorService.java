@@ -150,4 +150,24 @@ public class ErrorService {
                         (Boolean) r[6]))
                 .toList();
     }
+
+    @Transactional
+    public void softDeleteRpaError(Long id) {
+        rpaRepo.softDeleteById(id);
+    }
+
+    @Transactional
+    public void softDeleteJenkinsError(Long id) {
+        jenkinsRepo.softDeleteById(id);
+    }
+
+    @Transactional
+    public void restoreRpaError(Long id) {
+        rpaRepo.restoreById(id);
+    }
+
+    @Transactional
+    public void restoreJenkinsError(Long id) {
+        jenkinsRepo.restoreById(id);
+    }
 }
